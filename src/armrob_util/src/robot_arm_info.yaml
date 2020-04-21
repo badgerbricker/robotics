@@ -4,7 +4,7 @@ command_frequency: 30
 # Speed for controlled movement
 endpoint_speed: 0.05
 # Height offset (for safety: do dry runs in the air)
-vertical_offset: 0.02
+vertical_offset: -0.005
 # Sign of positive rotations w.r.t. the +y axis
 y_rotation_sign: 1 # Could otherwise be -1 if using 'positive rotations about the -y axis'
 # Frame offsets to successive links
@@ -24,15 +24,15 @@ rotational_limits_joint_34: [-84,110]
 rotational_limits_joint_45: [-85,85]
 rotational_limits_joint_56: [-87,96]
 # Rotational Axis degrees-to-microseconds mapping
-rotational_angles_for_mapping_joint_01: [-114.,0.,60]
-servo_cmd_us_for_mapping_joint_01: [600, 1616, 2281]
-rotational_angles_for_mapping_joint_12: [-169.,-90.,-34.]
-servo_cmd_us_for_mapping_joint_12: [2483, 1657, 1020]
-rotational_angles_for_mapping_joint_23: [-25.,90.,165.]
-servo_cmd_us_for_mapping_joint_23: [2318, 2091, 1112]
-rotational_angles_for_mapping_joint_34: [-112.,0.,82.]
-servo_cmd_us_for_mapping_joint_34: [601, 1620, 2500]
-rotational_angles_for_mapping_joint_45: [-85.,0.,90.]
-servo_cmd_us_for_mapping_joint_45: [2500, 1620, 715]
-rotational_angles_for_mapping_joint_56: [-116.,0.,72.]
-servo_cmd_us_for_mapping_joint_56: [540, 1622, 2380]
+rotational_angles_for_mapping_joint_01: [-114.,0.,90]
+servo_cmd_us_for_mapping_joint_01: [600, 1540, 2500]
+rotational_angles_for_mapping_joint_12: [-150.,-90.,-15.]
+servo_cmd_us_for_mapping_joint_12: [2320, 1589, 850]
+rotational_angles_for_mapping_joint_23: [50.,90.,160.]
+servo_cmd_us_for_mapping_joint_23: [2400, 1888, 812]
+rotational_angles_for_mapping_joint_34: [-112.,0.,90.]
+servo_cmd_us_for_mapping_joint_34: [590, 1550, 2450]
+rotational_angles_for_mapping_joint_45: [-85.,0.,105.]
+servo_cmd_us_for_mapping_joint_45: [2471, 1600, 593]
+rotational_angles_for_mapping_joint_56: [-90.,0.,95.]
+servo_cmd_us_for_mapping_joint_56: [562, 1428, 2500]
