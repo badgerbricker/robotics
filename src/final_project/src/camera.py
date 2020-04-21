@@ -29,7 +29,11 @@ def start_node():
 		msg_out = position_msg()
 		msg_out.x = 0
 		msg_out.y = 0
-		msg_out.z = 0
+		msg_out.z = 0 
+
+		# TODO integrate camera into this 
+		#set the y as the Z
+		#use array of float32 x,y,z  or use the ME439 armrob_util_message should be good with pull
 
 		pub.publish(msg_out)
 		rate.sleep()
