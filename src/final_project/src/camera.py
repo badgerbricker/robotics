@@ -9,6 +9,16 @@ from armrob_util.msg import ME439WaypointXYZ
 from cv_bridge import CvBridge 
 from sensor_msgs.msg import Image
 
+global previous_data
+
+def scale_to_robot(x,y):
+	#convert mm to m
+	#robot length is 0.27 meters
+	#arm length 0.7 meters
+	x=x/1000.0
+	y=y/1000.0
+	return (x/0.7)*0.27, (y/0.7)*0.27 
+
 
 def find_center(corner):
 	x_mid=corner[0][0][0]
@@ -30,13 +40,16 @@ def world_frame(corner,image):
 	x_center*=scale
 	y_center*=scale
 
+	x_center, y_center = scale_to_robot(x_center,y_center)
+
 	return [x_center,y_center]
 
 def detect_aruco(frame, dictionary, parameters):
 	markercorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame,dictionary,parameters=parameters)
 	hand_loc=[0,0]
 	shoulder_loc=[0,0]
-	final=[0,0]
+	global previous_data
+	final=previous_data
 	if(len(markercorners)>0):
 		cv2.aruco.drawDetectedMarkers(frame, markercorners, markerIds)
 		corner_num=0
@@ -50,8 +63,10 @@ def detect_aruco(frame, dictionary, parameters):
 			corner_num+=1
 
 		if(hand_loc!=[] and shoulder_loc!=[]):
+			#frame =cv2.line(frame, hand_loc, shoulder_loc)
 			final[0]=abs(hand_loc[0]-shoulder_loc[0])
-			final[1]=abs(hand_loc[1]-shoulder_loc[1])
+			final[2]=abs(hand_loc[1]-shoulder_loc[1])
+			previous_data=final
 
 	return final, frame
 
@@ -59,7 +74,7 @@ def detect_aruco(frame, dictionary, parameters):
 
 def start_node():
 	#ros node setup
-	pub = rospy.Publisher('segmented_pos_data',ME439WaypointXYZ, queue_size=10)
+	pub = rospy.Publisher('waypoint_xyz',ME439WaypointXYZ, queue_size=10)
 	img_pub = rospy.Publisher('image_data',Image, queue_size=10)
 	rospy.init_node("camera_tracker", anonymous=False)
 	rate = rospy.Rate(10) #10Hz
@@ -73,28 +88,39 @@ def start_node():
 	bridge = CvBridge()
 
 	average_count=0
-	avg_data=[0,0,0]
+	avg_data=[0.1,0,0.2]
+	global previous_data
+	previous_data=[0.1,0,0.2]
 
 	while not rospy.is_shutdown():
 		#get frame
 		ret, frame = cap.read()
 		aruco_loc, frame = detect_aruco(frame, dictionary, parameters)
 
-		avg_data[0]+=aruco_loc[0]
-		avg_data[2]+=aruco_loc[1]
+		#prepare for average
+		avg_data=aruco_loc
+		#avg_data[0]+=aruco_loc[0]
+		#avg_data[2]+=aruco_loc[2]
+
 		# Display the resulting frame
 		cv_image = bridge.cv2_to_imgmsg(frame,"bgr8")
-		#cv_image = bridge.imgmsg_to_cv2(frame, "bgr8")
 		img_pub.publish(cv_image)
 
 		average_count+=1
 		#average data over last 15 frames
 		if(average_count>=15):
-			avg_data[0]/=average_count
-			avg_data[2]/=average_count
+			#avg_data[0]/=average_count
+			#avg_data[2]/=average_count
 			msg_out = ME439WaypointXYZ()
+
+			#limit the waypoint
+			#avg_data[0]=min(avg_data[0],0.25)
+			#avg_data[2]=min(avg_data[2],0.2)
+
+			#publish message
 			msg_out.xyz = np.array([avg_data[0],0,avg_data[2]])
 			pub.publish(msg_out)
+			previous_data= [avg_data[0],0,avg_data[2]]
 			average_count=0
 
 		rate.sleep()
