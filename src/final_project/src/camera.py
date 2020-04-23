@@ -50,7 +50,7 @@ def detect_aruco(frame, dictionary, parameters):
 	shoulder_loc=[0,0]
 	global previous_data
 	final=previous_data
-	if(len(markercorners)>0):
+	if(len(markercorners)>1):
 		cv2.aruco.drawDetectedMarkers(frame, markercorners, markerIds)
 		corner_num=0
 
@@ -63,7 +63,7 @@ def detect_aruco(frame, dictionary, parameters):
 			corner_num+=1
 
 		if(hand_loc!=[] and shoulder_loc!=[]):
-			#frame =cv2.line(frame, hand_loc, shoulder_loc)
+			#frame =cv2.line(frame, np.array(hand_loc), np.array(shoulder_loc),(255,0,0),2,8)
 			final[0]=abs(hand_loc[0]-shoulder_loc[0])
 			final[2]=abs(hand_loc[1]-shoulder_loc[1])
 			previous_data=final

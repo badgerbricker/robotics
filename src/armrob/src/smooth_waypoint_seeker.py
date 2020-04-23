@@ -75,8 +75,11 @@ def set_next_target_toward_waypoint():
         # set the path to be directly from here to the waypoint
         dr = np.array( waypoint.xyz ) - np.array( position_current.xyz  )   # XYZ vector from current location to Waypoint
         
-        drlength = np.sqrt(dr.dot(dr))  # Compute the Cartesian distance to the Waypoint. 
-        drhat = dr/drlength
+        drlength = np.sqrt(dr.dot(dr))  # Compute the Cartesian distance to the Waypoint.
+        if(drlength<=0.0001):
+            drhat = 0
+        else: 
+            drhat = dr/drlength
       
         # Compute the ME439WaypointXYZ message        
         target = ME439WaypointXYZ()        
