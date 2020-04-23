@@ -3,10 +3,16 @@ This is the catkin_ws folder. Must have ROS, OpenCV, and Python to run this prog
 
 ## Camera Segmentation
 This section covers how the camera image is segmented and location data determined.
+
 ### ArUco setup
-The code is capable of detecting ArUco codes 0-49. Id 10 is used for the shoulder, 20 for the elbow, and 30 for the hand. Currently none are used for the background
+The code is capable of detecting ArUco codes 0-49. Id 10 is used for the shoulder, 20 for the elbow, and 30 for the hand. Currently none are used for the background.
+
 ### Distance calculations
-The distance of each Aruco is calculated by taking a ratio of the x,y pixel location to the total number of pixels in each direction then multiplying this ratio by the measured milimeter distance along the x and y axis as measured in real life and hard coded into the code. This is why it is ~critical~ that the person holding the Aruco items stand in the right side of the frame, opencv puts the origin of an image (0,0) at the top left from the camera's view.
+The final x,y,z cordinate is calculated as the euclidean distance between the center of the shoulder Aruco marker and the hand Aruco marker. The world distance to pixel ratio is calculated using a ratio of the pixels comprising the edge of one Aruco to the actual size in mm of that Aruco. Each Aruco is 100mm on every side. This distance calculation is more accurate than previous ones. This pixel to real world distance is then used to convert the pixel distance betweent he Aruco markers to a distance vector. This distance data is packaged in a *ME439WaypointXYZ* message and published to the topic *segmented_pos_data* in the node *camera_tracker*. The distance data is averaged over the last 15 frames currently but that is subject to change. Assuming a standard 60 fps this average would be over 0.25 seconds.
+
+##Viewing Segmented Images
+ROS uses a different image format than OpenCV which detects the Aruco markers. In order to be able to see the images for debugging purposes they are published to the topic ~image_data~ as type *Image* from *sensor_msgs*, a standard ROS message. This image data can then be seen by issuing the 'rqt_image_view /image_data' command in the command line running ROS. This feature was added to the *arm_simulate_camera_controlled.launch* file.
+
 
 ## Networking
 A laptop will run the ROS Master node to do the computer vision and decoding, then send the orientation information to the pi over a network connection.

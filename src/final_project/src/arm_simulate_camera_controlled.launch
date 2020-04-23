@@ -10,6 +10,8 @@
 
   <!-- Run the camera node and send waypoints -->
   <node name="camera" pkg="final_project" type="camera.py"/>
+  <node pkg="rqt_image_view" type="rqt_image_view" name="image_debug" args="/image_data" />
+
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />

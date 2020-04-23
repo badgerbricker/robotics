@@ -72,24 +72,31 @@ def start_node():
 	parameters = cv2.aruco.DetectorParameters_create()
 	bridge = CvBridge()
 
+	average_count=0
+	avg_data=[0,0,0]
+
 	while not rospy.is_shutdown():
 		#get frame
 		ret, frame = cap.read()
 		aruco_loc, frame = detect_aruco(frame, dictionary, parameters)
 
+		avg_data[0]+=aruco_loc[0]
+		avg_data[2]+=aruco_loc[1]
 		# Display the resulting frame
 		cv_image = bridge.cv2_to_imgmsg(frame,"bgr8")
 		#cv_image = bridge.imgmsg_to_cv2(frame, "bgr8")
 		img_pub.publish(cv_image)
 
-		msg_out = ME439WaypointXYZ()
-		msg_out.xyz = np.array([aruco_loc[0],0,aruco_loc[1]])
+		average_count+=1
+		#average data over last 15 frames
+		if(average_count>=15):
+			avg_data[0]/=average_count
+			avg_data[2]/=average_count
+			msg_out = ME439WaypointXYZ()
+			msg_out.xyz = np.array([avg_data[0],0,avg_data[2]])
+			pub.publish(msg_out)
+			average_count=0
 
-		# TODO:
-		#add smoothing to the message. Average last 60? (one second)
-		#find a way to add a debug window
-
-		pub.publish(msg_out)
 		rate.sleep()
 
 	cap.release()
