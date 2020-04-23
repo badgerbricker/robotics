@@ -4,14 +4,10 @@ import rospy
 import numpy as np
 import cv2
 from final_project.msg import position_msg
+from armrob_util.msg import ME439WaypointXYZ
 
-def get_frame(cap):
-
-	ret, frame = cap.read()
-
-	gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-
-	return gray
+from cv_bridge import CvBridge 
+from sensor_msgs.msg import Image
 
 
 def find_center(corner):
@@ -36,7 +32,7 @@ def world_frame(corner,image):
 
 	return [x_center,y_center]
 
-def detect_aruco(frame, dictionary, parameters, debug):
+def detect_aruco(frame, dictionary, parameters):
 	markercorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame,dictionary,parameters=parameters)
 	hand_loc=[0,0]
 	shoulder_loc=[0,0]
@@ -57,17 +53,14 @@ def detect_aruco(frame, dictionary, parameters, debug):
 			final[0]=abs(hand_loc[0]-shoulder_loc[0])
 			final[1]=abs(hand_loc[1]-shoulder_loc[1])
 
-	#if(debug):
-		# Display the resulting frame
-	#	cv2.imshow('frame',frame)
-
-	return final
+	return final, frame
 
 
 
 def start_node():
 	#ros node setup
-	pub = rospy.Publisher('segmented_pos_data',position_msg, queue_size=10)
+	pub = rospy.Publisher('segmented_pos_data',ME439WaypointXYZ, queue_size=10)
+	img_pub = rospy.Publisher('image_data',Image, queue_size=10)
 	rospy.init_node("camera_tracker", anonymous=False)
 	rate = rospy.Rate(10) #10Hz
 
@@ -77,19 +70,22 @@ def start_node():
 	#Aruco setip
 	dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
 	parameters = cv2.aruco.DetectorParameters_create()
+	bridge = CvBridge()
 
 	while not rospy.is_shutdown():
 		#get frame
 		ret, frame = cap.read()
-		aruco_loc = detect_aruco(frame, dictionary, parameters, False)
-		
-		msg_out = position_msg()
-		msg_out.x = aruco_loc[0]
-		msg_out.y = -1
-		msg_out.z = aruco_loc[1] 
+		aruco_loc, frame = detect_aruco(frame, dictionary, parameters)
+
+		# Display the resulting frame
+		cv_image = bridge.cv2_to_imgmsg(frame,"bgr8")
+		#cv_image = bridge.imgmsg_to_cv2(frame, "bgr8")
+		img_pub.publish(cv_image)
+
+		msg_out = ME439WaypointXYZ()
+		msg_out.xyz = np.array([aruco_loc[0],0,aruco_loc[1]])
 
 		# TODO:
-		#use array of float32 x,y,z  or use the ME439 armrob_util_message should be good with pull
 		#add smoothing to the message. Average last 60? (one second)
 		#find a way to add a debug window
 
