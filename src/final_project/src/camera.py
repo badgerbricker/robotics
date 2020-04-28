@@ -21,12 +21,30 @@ def scale_to_robot(x,y):
 
 
 def find_center(corner):
+	x_mid=0
+	y_mid=0
+	if(corner[0][0][0]>corner[0][2][0]):
+		x_mid=corner[0][2][0]+abs(corner[0][0][0]-corner[0][2][0])/2.0
+	elif(corner[0][0][0]<corner[0][2][0]):
+		x_mid=corner[0][0][0]+abs(corner[0][0][0]-corner[0][2][0])/2.0
+	else:
+		x_mid=corner[0][0][0]
+
+	if(corner[0][3][1]>corner[0][1][1]):
+		y_mid=corner[0][1][1]+abs(corner[0][1][1]-corner[0][3][1])/2.0
+	elif(corner[0][3][1]<corner[0][1][1]):
+		y_mid=corner[0][3][1]+abs(corner[0][1][1]-corner[0][3][1])/2.0
+	else:
+		y_mid=corner[0][3][1]
+
+	'''
 	x_mid=corner[0][0][0]
-	x_mid+=abs(corner[0][0][0]-corner[0][1][0])
+	x_mid+=(corner[0][1][0]-corner[0][0][0])
 
 	y_mid=corner[0][0][1]
-	y_mid+=abs(corner[0][0][1]-corner[0][3][1])
-	return x_mid,y_mid
+	y_mid+=(corner[0][3][1]-corner[0][0][1])
+	'''
+	return int(x_mid),int(y_mid)
 
 def world_frame(corner,image):
 	x_distance=abs(corner[0][0][0]-corner[0][1][0])
@@ -53,17 +71,21 @@ def detect_aruco(frame, dictionary, parameters):
 	if(len(markercorners)>1):
 		cv2.aruco.drawDetectedMarkers(frame, markercorners, markerIds)
 		corner_num=0
+		hand_loc_pix=[0,0]
+		shoulder_loc_pix=[0,0]
 
 		while corner_num < len(markercorners):
 			
 			if(markerIds[corner_num]==30):
 				hand_loc=world_frame(markercorners[corner_num],frame)
+				hand_loc_pix = find_center(markercorners[corner_num])
 			if(markerIds[corner_num]==10):
 				shoulder_loc=world_frame(markercorners[corner_num],frame)
+				shoulder_loc_pix = find_center(markercorners[corner_num])
 			corner_num+=1
 
 		if(hand_loc!=[] and shoulder_loc!=[]):
-			#frame =cv2.line(frame, np.array(hand_loc), np.array(shoulder_loc),(255,0,0),2,8)
+			frame =cv2.line(frame, (hand_loc_pix[0],hand_loc_pix[1]), (shoulder_loc_pix[0],shoulder_loc_pix[1]),(0,0,255),5)
 			final[0]=abs(hand_loc[0]-shoulder_loc[0])
 			final[2]=abs(hand_loc[1]-shoulder_loc[1])
 			previous_data=final
